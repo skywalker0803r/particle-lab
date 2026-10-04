@@ -9,6 +9,8 @@
 - **Boids 群集行為**：透過分離（Separation）、對齊（Alignment）與凝聚（Cohesion）規則，呈現粒子如何形成群集。
 - **粒子群最佳化（PSO）**：粒子以個體最佳位置及群體最佳位置為依據，搜尋目標函數 `f(x, y) = x² + y²` 的最小值。
 - **Particle Life 粒子生命**：四種粒子依物種間的吸引與排斥規則互動，形成持續變化的群落與圖樣；可調整互動半徑、作用力、速度阻尼及核心排斥。
+- **Vicsek 群集模型**：粒子跟隨鄰近方向並受隨機角度雜訊擾動，呈現系統如何從無序轉為集體同步。
+- **擴散限制聚集（DLA）**：隨機漫步粒子碰觸既有團簇後附著，逐步形成樹枝狀分形結構。
 - **即時控制**：調整演算法參數、粒子數量（500–100,000；預設 10,000），或暫停及重設模擬。
 - **效能監測**：顯示目前 FPS；PSO 模式也會顯示目前找到的最佳適應值。
 - **響應式介面**：支援桌面與行動裝置版面。
@@ -21,7 +23,7 @@
 - [Stats.js](https://github.com/mrdoob/stats.js/)：FPS 效能監測
 - GitHub Actions 與 GitHub Pages：自動建置及部署
 
-Boids 與 Particle Life 使用空間網格索引查找附近粒子，避免每個粒子都與整個群體逐一比對。模擬採週期性邊界；實際 FPS 會依粒子數量、瀏覽器及裝置效能而異。
+Boids、Particle Life 與 Vicsek 使用空間網格索引查找附近粒子，避免每個粒子都與整個群體逐一比對。這些群集模型採週期性邊界；DLA 則在中心周圍累積粒子。實際 FPS 會依粒子數量、瀏覽器及裝置效能而異。
 
 ## 本機開發
 
@@ -58,8 +60,10 @@ Vite 會在終端機顯示本機網址，通常為 <http://localhost:5173/>。
 │   ├── algorithms/
 │   │   ├── BaseAlgorithm.ts       # 粒子資料與演算法基底
 │   │   ├── BoidsAlgorithm.ts      # Boids 群集行為
+│   │   ├── DiffusionLimitedAggregation.ts
 │   │   ├── ParticleLifeAlgorithm.ts
-│   │   └── ParticleSwarmOptimization.ts
+│   │   ├── ParticleSwarmOptimization.ts
+│   │   └── VicsekAlgorithm.ts
 │   ├── ParticleRenderer.ts        # Three.js 粒子渲染
 │   ├── main.ts                    # 介面、控制與動畫迴圈
 │   └── style.css                  # 響應式樣式

@@ -2,12 +2,14 @@ import Stats from 'stats.js';
 import { Pane } from 'tweakpane';
 import type { BaseAlgorithm } from './algorithms/BaseAlgorithm';
 import { BoidsAlgorithm, type BoidsSettings } from './algorithms/BoidsAlgorithm';
+import { DiffusionLimitedAggregation, type DlaSettings } from './algorithms/DiffusionLimitedAggregation';
 import { ParticleLifeAlgorithm, type ParticleLifeSettings } from './algorithms/ParticleLifeAlgorithm';
 import { ParticleSwarmOptimization, type PsoSettings } from './algorithms/ParticleSwarmOptimization';
+import { VicsekAlgorithm, type VicsekSettings } from './algorithms/VicsekAlgorithm';
 import { ParticleRenderer } from './ParticleRenderer';
 import './style.css';
 
-type AlgorithmName = 'boids' | 'pso' | 'particle-life';
+type AlgorithmName = 'boids' | 'pso' | 'particle-life' | 'vicsek' | 'dla';
 
 const canvas = getElement<HTMLCanvasElement>('#simulation');
 const canvasWrap = getElement<HTMLDivElement>('#canvas-wrap');
@@ -46,6 +48,16 @@ const particleLifeSettings: ParticleLifeSettings = {
   friction: 1.35,
   coreRepulsion: 1.4,
 };
+const vicsekSettings: VicsekSettings = {
+  perceptionRadius: 36,
+  noise: 0.35,
+  speed: 76,
+};
+const dlaSettings: DlaSettings = {
+  walkSpeed: 90,
+  launchDistance: 20,
+  maxStepPerFrame: 8,
+};
 
 let algorithmName: AlgorithmName = 'boids';
 let algorithm: BaseAlgorithm;
@@ -73,9 +85,19 @@ function createAlgorithm(name: AlgorithmName, count: number): BaseAlgorithm {
     pso.setSettings(psoSettings);
     return pso;
   }
-  const particleLife = new ParticleLifeAlgorithm(count);
-  particleLife.setSettings(particleLifeSettings);
-  return particleLife;
+  if (name === 'particle-life') {
+    const particleLife = new ParticleLifeAlgorithm(count);
+    particleLife.setSettings(particleLifeSettings);
+    return particleLife;
+  }
+  if (name === 'vicsek') {
+    const vicsek = new VicsekAlgorithm(count);
+    vicsek.setSettings(vicsekSettings);
+    return vicsek;
+  }
+  const dla = new DiffusionLimitedAggregation(count);
+  dla.setSettings(dlaSettings);
+  return dla;
 }
 
 function updateViewport(): void {
@@ -112,10 +134,24 @@ function updateLabels(count: number): void {
     algorithmDetail.textContent = 'GLOBAL OPTIMIZATION';
     return;
   }
-  algorithmLabel.textContent = 'PARTICLE LIFE';
-  canvasMode.textContent = 'FOUR SPECIES · ATTRACTION · REPULSION';
-  algorithmMetric.textContent = 'P-LIFE';
-  algorithmDetail.textContent = '4 SPECIES · EMERGENT PATTERNS';
+  if (algorithmName === 'particle-life') {
+    algorithmLabel.textContent = 'PARTICLE LIFE';
+    canvasMode.textContent = 'FOUR SPECIES · ATTRACTION · REPULSION';
+    algorithmMetric.textContent = 'P-LIFE';
+    algorithmDetail.textContent = '4 SPECIES · EMERGENT PATTERNS';
+    return;
+  }
+  if (algorithmName === 'vicsek') {
+    algorithmLabel.textContent = 'VICSEK FLOCKING MODEL';
+    canvasMode.textContent = 'LOCAL ALIGNMENT · ORDER FROM NOISE';
+    algorithmMetric.textContent = 'VICSEK';
+    algorithmDetail.textContent = 'NOISE-DRIVEN COLLECTIVE ORDER';
+    return;
+  }
+  algorithmLabel.textContent = 'DIFFUSION-LIMITED AGGREGATION';
+  canvasMode.textContent = 'RANDOM WALK · DIFFUSION · BRANCHING';
+  algorithmMetric.textContent = 'DLA';
+  algorithmDetail.textContent = 'GROWING FRACTAL CLUSTER';
 }
 
 function createPane(): void {
@@ -209,44 +245,112 @@ function createPane(): void {
     return;
   }
 
-  pane.addInput(particleLifeSettings, 'interactionRadius', {
-    label: '互動半徑',
-    min: 18,
-    max: 120,
-    step: 1,
-  }).on('change', ({ value }) => {
-    if (algorithm instanceof ParticleLifeAlgorithm) {
-      algorithm.setSettings({ interactionRadius: value });
-    }
-  });
-  pane.addInput(particleLifeSettings, 'force', {
-    label: '互動強度',
+  if (algorithmName === 'particle-life') {
+    pane.addInput(particleLifeSettings, 'interactionRadius', {
+      label: '互動半徑',
+      min: 18,
+      max: 120,
+      step: 1,
+    }).on('change', ({ value }) => {
+      if (algorithm instanceof ParticleLifeAlgorithm) {
+        algorithm.setSettings({ interactionRadius: value });
+      }
+    });
+    pane.addInput(particleLifeSettings, 'force', {
+      label: '互動強度',
+      min: 10,
+      max: 220,
+      step: 1,
+    }).on('change', ({ value }) => {
+      if (algorithm instanceof ParticleLifeAlgorithm) {
+        algorithm.setSettings({ force: value });
+      }
+    });
+    pane.addInput(particleLifeSettings, 'friction', {
+      label: '速度阻尼',
+      min: 0,
+      max: 5,
+      step: 0.05,
+    }).on('change', ({ value }) => {
+      if (algorithm instanceof ParticleLifeAlgorithm) {
+        algorithm.setSettings({ friction: value });
+      }
+    });
+    pane.addInput(particleLifeSettings, 'coreRepulsion', {
+      label: '核心排斥',
+      min: 0.2,
+      max: 3,
+      step: 0.05,
+    }).on('change', ({ value }) => {
+      if (algorithm instanceof ParticleLifeAlgorithm) {
+        algorithm.setSettings({ coreRepulsion: value });
+      }
+    });
+    return;
+  }
+
+  if (algorithmName === 'vicsek') {
+    pane.addInput(vicsekSettings, 'perceptionRadius', {
+      label: '感知半徑',
+      min: 10,
+      max: 100,
+      step: 1,
+    }).on('change', ({ value }) => {
+      if (algorithm instanceof VicsekAlgorithm) {
+        algorithm.setSettings({ perceptionRadius: value });
+      }
+    });
+    pane.addInput(vicsekSettings, 'noise', {
+      label: '方向雜訊',
+      min: 0,
+      max: 1,
+      step: 0.01,
+    }).on('change', ({ value }) => {
+      if (algorithm instanceof VicsekAlgorithm) {
+        algorithm.setSettings({ noise: value });
+      }
+    });
+    pane.addInput(vicsekSettings, 'speed', {
+      label: '移動速度',
+      min: 15,
+      max: 180,
+      step: 1,
+    }).on('change', ({ value }) => {
+      if (algorithm instanceof VicsekAlgorithm) {
+        algorithm.setSettings({ speed: value });
+      }
+    });
+    return;
+  }
+
+  pane.addInput(dlaSettings, 'walkSpeed', {
+    label: '隨機漫步速度',
     min: 10,
-    max: 220,
+    max: 240,
     step: 1,
   }).on('change', ({ value }) => {
-    if (algorithm instanceof ParticleLifeAlgorithm) {
-      algorithm.setSettings({ force: value });
+    if (algorithm instanceof DiffusionLimitedAggregation) {
+      algorithm.setSettings({ walkSpeed: value });
     }
   });
-  pane.addInput(particleLifeSettings, 'friction', {
-    label: '速度阻尼',
-    min: 0,
-    max: 5,
-    step: 0.05,
+  pane.addInput(dlaSettings, 'launchDistance', {
+    label: '發射距離',
+    min: 8,
+    max: 100,
+    step: 1,
   }).on('change', ({ value }) => {
-    if (algorithm instanceof ParticleLifeAlgorithm) {
-      algorithm.setSettings({ friction: value });
+    if (algorithm instanceof DiffusionLimitedAggregation) {
+      algorithm.setSettings({ launchDistance: value });
     }
   });
-  pane.addInput(particleLifeSettings, 'coreRepulsion', {
-    label: '核心排斥',
-    min: 0.2,
-    max: 3,
-    step: 0.05,
+  pane.addInput(dlaSettings, 'maxStepPerFrame', {
+    label: '每影格步數上限',
+    min: 1,
+    max: 8,
+    step: 1,
   }).on('change', ({ value }) => {
-    if (algorithm instanceof ParticleLifeAlgorithm) {
-      algorithm.setSettings({ coreRepulsion: value });
+    if (algorithm instanceof DiffusionLimitedAggregation) {
+      algorithm.setSettings({ maxStepPerFrame: value });
     }
   });
 }
@@ -274,6 +378,9 @@ function animate(time: number): void {
     fpsLabel.textContent = String(Math.round(frames / fpsElapsed));
     if (algorithm instanceof ParticleSwarmOptimization) {
       algorithmDetail.textContent = `BEST FITNESS ${algorithm.bestFitness.toFixed(4)}`;
+    } else if (algorithm instanceof DiffusionLimitedAggregation) {
+      algorithmDetail.textContent =
+        `${algorithm.attachedCount.toLocaleString('en-US')} PARTICLES AGGREGATED`;
     }
     frames = 0;
     fpsElapsed = 0;
