@@ -2,14 +2,16 @@ import Stats from 'stats.js';
 import { Pane } from 'tweakpane';
 import type { BaseAlgorithm } from './algorithms/BaseAlgorithm';
 import { BoidsAlgorithm, type BoidsSettings } from './algorithms/BoidsAlgorithm';
+import { CmaEsAlgorithm, type CmaEsSettings } from './algorithms/CmaEsAlgorithm';
 import { DiffusionLimitedAggregation, type DlaSettings } from './algorithms/DiffusionLimitedAggregation';
+import { DifferentialEvolution, type DifferentialEvolutionSettings } from './algorithms/DifferentialEvolution';
 import { ParticleLifeAlgorithm, type ParticleLifeSettings } from './algorithms/ParticleLifeAlgorithm';
 import { ParticleSwarmOptimization, type PsoSettings } from './algorithms/ParticleSwarmOptimization';
 import { VicsekAlgorithm, type VicsekSettings } from './algorithms/VicsekAlgorithm';
 import { ParticleRenderer } from './ParticleRenderer';
 import './style.css';
 
-type AlgorithmName = 'boids' | 'pso' | 'particle-life' | 'vicsek' | 'dla';
+type AlgorithmName = 'boids' | 'pso' | 'particle-life' | 'vicsek' | 'dla' | 'cma-es' | 'de';
 
 const canvas = getElement<HTMLCanvasElement>('#simulation');
 const canvasWrap = getElement<HTMLDivElement>('#canvas-wrap');
@@ -58,6 +60,15 @@ const dlaSettings: DlaSettings = {
   launchDistance: 20,
   maxStepPerFrame: 8,
 };
+const cmaEsSettings: CmaEsSettings = {
+  sigma: 0.48,
+  learningRate: 1,
+};
+const differentialEvolutionSettings: DifferentialEvolutionSettings = {
+  differentialWeight: 0.72,
+  crossoverRate: 0.82,
+  generationSpeed: 6,
+};
 
 let algorithmName: AlgorithmName = 'boids';
 let algorithm: BaseAlgorithm;
@@ -95,9 +106,19 @@ function createAlgorithm(name: AlgorithmName, count: number): BaseAlgorithm {
     vicsek.setSettings(vicsekSettings);
     return vicsek;
   }
-  const dla = new DiffusionLimitedAggregation(count);
-  dla.setSettings(dlaSettings);
-  return dla;
+  if (name === 'dla') {
+    const dla = new DiffusionLimitedAggregation(count);
+    dla.setSettings(dlaSettings);
+    return dla;
+  }
+  if (name === 'cma-es') {
+    const cmaEs = new CmaEsAlgorithm(count);
+    cmaEs.setSettings(cmaEsSettings);
+    return cmaEs;
+  }
+  const differentialEvolution = new DifferentialEvolution(count);
+  differentialEvolution.setSettings(differentialEvolutionSettings);
+  return differentialEvolution;
 }
 
 function updateViewport(): void {
@@ -148,10 +169,24 @@ function updateLabels(count: number): void {
     algorithmDetail.textContent = 'NOISE-DRIVEN COLLECTIVE ORDER';
     return;
   }
-  algorithmLabel.textContent = 'DIFFUSION-LIMITED AGGREGATION';
-  canvasMode.textContent = 'RANDOM WALK · DIFFUSION · BRANCHING';
-  algorithmMetric.textContent = 'DLA';
-  algorithmDetail.textContent = 'GROWING FRACTAL CLUSTER';
+  if (algorithmName === 'dla') {
+    algorithmLabel.textContent = 'DIFFUSION-LIMITED AGGREGATION';
+    canvasMode.textContent = 'RANDOM WALK · DIFFUSION · BRANCHING';
+    algorithmMetric.textContent = 'DLA';
+    algorithmDetail.textContent = 'GROWING FRACTAL CLUSTER';
+    return;
+  }
+  if (algorithmName === 'cma-es') {
+    algorithmLabel.textContent = 'COVARIANCE MATRIX ADAPTATION';
+    canvasMode.textContent = 'SEARCH DISTRIBUTION · COVARIANCE · EVOLUTION';
+    algorithmMetric.textContent = 'CMA-ES';
+    algorithmDetail.textContent = 'COVARIANCE-ADAPTIVE SEARCH';
+    return;
+  }
+  algorithmLabel.textContent = 'DIFFERENTIAL EVOLUTION';
+  canvasMode.textContent = 'MUTATION · CROSSOVER · SELECTION';
+  algorithmMetric.textContent = 'DE';
+  algorithmDetail.textContent = 'POPULATION-BASED OPTIMIZATION';
 }
 
 function createPane(): void {
@@ -323,34 +358,92 @@ function createPane(): void {
     return;
   }
 
-  pane.addInput(dlaSettings, 'walkSpeed', {
-    label: '隨機漫步速度',
-    min: 10,
-    max: 240,
-    step: 1,
+  if (algorithmName === 'dla') {
+    pane.addInput(dlaSettings, 'walkSpeed', {
+      label: '隨機漫步速度',
+      min: 10,
+      max: 240,
+      step: 1,
+    }).on('change', ({ value }) => {
+      if (algorithm instanceof DiffusionLimitedAggregation) {
+        algorithm.setSettings({ walkSpeed: value });
+      }
+    });
+    pane.addInput(dlaSettings, 'launchDistance', {
+      label: '發射距離',
+      min: 8,
+      max: 100,
+      step: 1,
+    }).on('change', ({ value }) => {
+      if (algorithm instanceof DiffusionLimitedAggregation) {
+        algorithm.setSettings({ launchDistance: value });
+      }
+    });
+    pane.addInput(dlaSettings, 'maxStepPerFrame', {
+      label: '每影格步數上限',
+      min: 1,
+      max: 8,
+      step: 1,
+    }).on('change', ({ value }) => {
+      if (algorithm instanceof DiffusionLimitedAggregation) {
+        algorithm.setSettings({ maxStepPerFrame: value });
+      }
+    });
+    return;
+  }
+
+  if (algorithmName === 'cma-es') {
+    pane.addInput(cmaEsSettings, 'sigma', {
+      label: '初始步長 σ',
+      min: 0.05,
+      max: 1.2,
+      step: 0.01,
+    }).on('change', ({ value }) => {
+      if (algorithm instanceof CmaEsAlgorithm) {
+        algorithm.setSettings({ sigma: value });
+      }
+    });
+    pane.addInput(cmaEsSettings, 'learningRate', {
+      label: '步長學習率',
+      min: 0.2,
+      max: 2,
+      step: 0.05,
+    }).on('change', ({ value }) => {
+      if (algorithm instanceof CmaEsAlgorithm) {
+        algorithm.setSettings({ learningRate: value });
+      }
+    });
+    return;
+  }
+
+  pane.addInput(differentialEvolutionSettings, 'differentialWeight', {
+    label: '差分權重 F',
+    min: 0.1,
+    max: 1.5,
+    step: 0.01,
   }).on('change', ({ value }) => {
-    if (algorithm instanceof DiffusionLimitedAggregation) {
-      algorithm.setSettings({ walkSpeed: value });
+    if (algorithm instanceof DifferentialEvolution) {
+      algorithm.setSettings({ differentialWeight: value });
     }
   });
-  pane.addInput(dlaSettings, 'launchDistance', {
-    label: '發射距離',
-    min: 8,
-    max: 100,
-    step: 1,
+  pane.addInput(differentialEvolutionSettings, 'crossoverRate', {
+    label: '交叉率 CR',
+    min: 0,
+    max: 1,
+    step: 0.01,
   }).on('change', ({ value }) => {
-    if (algorithm instanceof DiffusionLimitedAggregation) {
-      algorithm.setSettings({ launchDistance: value });
+    if (algorithm instanceof DifferentialEvolution) {
+      algorithm.setSettings({ crossoverRate: value });
     }
   });
-  pane.addInput(dlaSettings, 'maxStepPerFrame', {
-    label: '每影格步數上限',
+  pane.addInput(differentialEvolutionSettings, 'generationSpeed', {
+    label: '世代更新頻率',
     min: 1,
-    max: 8,
+    max: 12,
     step: 1,
   }).on('change', ({ value }) => {
-    if (algorithm instanceof DiffusionLimitedAggregation) {
-      algorithm.setSettings({ maxStepPerFrame: value });
+    if (algorithm instanceof DifferentialEvolution) {
+      algorithm.setSettings({ generationSpeed: value });
     }
   });
 }
@@ -377,6 +470,11 @@ function animate(time: number): void {
   if (fpsElapsed >= 0.5) {
     fpsLabel.textContent = String(Math.round(frames / fpsElapsed));
     if (algorithm instanceof ParticleSwarmOptimization) {
+      algorithmDetail.textContent = `BEST FITNESS ${algorithm.bestFitness.toFixed(4)}`;
+    } else if (
+      algorithm instanceof CmaEsAlgorithm ||
+      algorithm instanceof DifferentialEvolution
+    ) {
       algorithmDetail.textContent = `BEST FITNESS ${algorithm.bestFitness.toFixed(4)}`;
     } else if (algorithm instanceof DiffusionLimitedAggregation) {
       algorithmDetail.textContent =

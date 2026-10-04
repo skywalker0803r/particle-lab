@@ -74,12 +74,14 @@
                 <option value="particle-life">Particle Life 粒子生命</option>
                 <option value="vicsek">Vicsek 群集模型</option>
                 <option value="dla">擴散限制聚集 (DLA)</option>
+                <option value="cma-es">CMA-ES 共變異數矩陣適應</option>
+                <option value="de">Differential Evolution 差分進化</option>
               </select>
             </div>
 
             <div class="control-group">
-              <label for="particle-count">粒子數量 <span id="particle-count-value">10,000</span></label>
-              <input id="particle-count" type="range" min="500" max="100000" step="500" value="10000" />
+              <label for="particle-count">粒子數量 <span id="particle-count-value">500</span></label>
+              <input id="particle-count" type="range" min="500" max="100000" step="500" value="500" />
               <div class="range-labels"><span>500</span><span>100,000</span></div>
             </div>
 
@@ -100,7 +102,7 @@
         <section class="metrics" aria-label="模擬效能指標">
           <div class="metric">
             <span class="metric-label">粒子數量 <span>PARTICLES</span></span>
-            <strong id="metric-particles">10,000</strong>
+            <strong id="metric-particles">500</strong>
             <span class="metric-detail">ACTIVE AGENTS</span>
           </div>
           <div class="metric">
