@@ -13,6 +13,8 @@
 - **Particle Life 粒子生命**：四種粒子依物種間的吸引與排斥規則互動，形成持續變化的群落與圖樣；可調整互動半徑、作用力、速度阻尼及核心排斥。
 - **Vicsek 群集模型**：粒子跟隨鄰近方向並受隨機角度雜訊擾動，呈現系統如何從無序轉為集體同步。
 - **擴散限制聚集（DLA）**：隨機漫步粒子碰觸既有團簇後附著，逐步形成樹枝狀分形結構。
+- **Vortex Spiral Drift（旋渦流）**：多重引力中心與切向渦旋交互，讓粒子像星系般繞著中心飄移，形成有層次的螺旋雲。
+- **Flow Field（流場）**：粒子在動態向量場中流動，呈現光帶般的流線與紊流感。
 - **即時控制**：調整演算法參數、粒子數量（500–100,000；預設 500），或暫停及重設模擬。
 - **效能監測**：顯示目前 FPS；PSO、CMA-ES 與 DE 模式也會顯示目前找到的最佳適應值。
 - **響應式介面**：支援桌面與行動裝置版面。
@@ -65,9 +67,11 @@ Vite 會在終端機顯示本機網址，通常為 <http://localhost:5173/>。
 │   │   ├── CmaEsAlgorithm.ts      # CMA-ES 演化策略
 │   │   ├── DiffusionLimitedAggregation.ts
 │   │   ├── DifferentialEvolution.ts
+│   │   ├── FlowFieldAlgorithm.ts
 │   │   ├── ParticleLifeAlgorithm.ts
 │   │   ├── ParticleSwarmOptimization.ts
-│   │   └── VicsekAlgorithm.ts
+│   │   ├── VicsekAlgorithm.ts
+│   │   └── VortexAlgorithm.ts
 │   ├── ParticleRenderer.ts        # Three.js 粒子渲染
 │   ├── main.ts                    # 介面、控制與動畫迴圈
 │   └── style.css                  # 響應式樣式

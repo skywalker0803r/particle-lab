@@ -5,13 +5,24 @@ import { BoidsAlgorithm, type BoidsSettings } from './algorithms/BoidsAlgorithm'
 import { CmaEsAlgorithm, type CmaEsSettings } from './algorithms/CmaEsAlgorithm';
 import { DiffusionLimitedAggregation, type DlaSettings } from './algorithms/DiffusionLimitedAggregation';
 import { DifferentialEvolution, type DifferentialEvolutionSettings } from './algorithms/DifferentialEvolution';
+import { FlowFieldAlgorithm, type FlowFieldSettings } from './algorithms/FlowFieldAlgorithm';
 import { ParticleLifeAlgorithm, type ParticleLifeSettings } from './algorithms/ParticleLifeAlgorithm';
 import { ParticleSwarmOptimization, type PsoSettings } from './algorithms/ParticleSwarmOptimization';
 import { VicsekAlgorithm, type VicsekSettings } from './algorithms/VicsekAlgorithm';
+import { VortexAlgorithm, type VortexSettings } from './algorithms/VortexAlgorithm';
 import { ParticleRenderer } from './ParticleRenderer';
 import './style.css';
 
-type AlgorithmName = 'boids' | 'pso' | 'particle-life' | 'vicsek' | 'dla' | 'cma-es' | 'de';
+type AlgorithmName =
+  | 'boids'
+  | 'pso'
+  | 'particle-life'
+  | 'vicsek'
+  | 'dla'
+  | 'cma-es'
+  | 'de'
+  | 'vortex'
+  | 'flow-field';
 
 const canvas = getElement<HTMLCanvasElement>('#simulation');
 const canvasWrap = getElement<HTMLDivElement>('#canvas-wrap');
@@ -69,6 +80,18 @@ const differentialEvolutionSettings: DifferentialEvolutionSettings = {
   crossoverRate: 0.82,
   generationSpeed: 6,
 };
+const vortexSettings: VortexSettings = {
+  attractionStrength: 220,
+  swirlStrength: 180,
+  turbulence: 24,
+  damping: 0.12,
+};
+const flowFieldSettings: FlowFieldSettings = {
+  strength: 120,
+  fieldScale: 6,
+  drift: 0.8,
+  damping: 0.16,
+};
 
 let algorithmName: AlgorithmName = 'boids';
 let algorithm: BaseAlgorithm;
@@ -115,6 +138,16 @@ function createAlgorithm(name: AlgorithmName, count: number): BaseAlgorithm {
     const cmaEs = new CmaEsAlgorithm(count);
     cmaEs.setSettings(cmaEsSettings);
     return cmaEs;
+  }
+  if (name === 'vortex') {
+    const vortex = new VortexAlgorithm(count);
+    vortex.setSettings(vortexSettings);
+    return vortex;
+  }
+  if (name === 'flow-field') {
+    const flowField = new FlowFieldAlgorithm(count);
+    flowField.setSettings(flowFieldSettings);
+    return flowField;
   }
   const differentialEvolution = new DifferentialEvolution(count);
   differentialEvolution.setSettings(differentialEvolutionSettings);
@@ -181,6 +214,20 @@ function updateLabels(count: number): void {
     canvasMode.textContent = 'SEARCH DISTRIBUTION · COVARIANCE · EVOLUTION';
     algorithmMetric.textContent = 'CMA-ES';
     algorithmDetail.textContent = 'COVARIANCE-ADAPTIVE SEARCH';
+    return;
+  }
+  if (algorithmName === 'vortex') {
+    algorithmLabel.textContent = 'VORTEX SPIRAL DRIFT';
+    canvasMode.textContent = 'SWIRL · ATTRACTION · TURBULENCE';
+    algorithmMetric.textContent = 'VORTEX';
+    algorithmDetail.textContent = 'SPIRAL GRAVITATIONAL FLOW';
+    return;
+  }
+  if (algorithmName === 'flow-field') {
+    algorithmLabel.textContent = 'FLOW FIELD';
+    canvasMode.textContent = 'STREAMLINES · CURVATURE · DRIFT';
+    algorithmMetric.textContent = 'FLOW';
+    algorithmDetail.textContent = 'VECTOR-DRIVEN FLUX';
     return;
   }
   algorithmLabel.textContent = 'DIFFERENTIAL EVOLUTION';
@@ -411,6 +458,92 @@ function createPane(): void {
     }).on('change', ({ value }) => {
       if (algorithm instanceof CmaEsAlgorithm) {
         algorithm.setSettings({ learningRate: value });
+      }
+    });
+    return;
+  }
+  if (algorithmName === 'vortex') {
+    pane.addInput(vortexSettings, 'attractionStrength', {
+      label: '吸引強度',
+      min: 40,
+      max: 420,
+      step: 1,
+    }).on('change', ({ value }) => {
+      if (algorithm instanceof VortexAlgorithm) {
+        algorithm.setSettings({ attractionStrength: value });
+      }
+    });
+    pane.addInput(vortexSettings, 'swirlStrength', {
+      label: '渦流強度',
+      min: 20,
+      max: 320,
+      step: 1,
+    }).on('change', ({ value }) => {
+      if (algorithm instanceof VortexAlgorithm) {
+        algorithm.setSettings({ swirlStrength: value });
+      }
+    });
+    pane.addInput(vortexSettings, 'turbulence', {
+      label: '紊流量',
+      min: 0,
+      max: 80,
+      step: 1,
+    }).on('change', ({ value }) => {
+      if (algorithm instanceof VortexAlgorithm) {
+        algorithm.setSettings({ turbulence: value });
+      }
+    });
+    pane.addInput(vortexSettings, 'damping', {
+      label: '阻尼',
+      min: 0,
+      max: 0.25,
+      step: 0.01,
+    }).on('change', ({ value }) => {
+      if (algorithm instanceof VortexAlgorithm) {
+        algorithm.setSettings({ damping: value });
+      }
+    });
+    return;
+  }
+  if (algorithmName === 'flow-field') {
+    pane.addInput(flowFieldSettings, 'strength', {
+      label: '場強度',
+      min: 20,
+      max: 220,
+      step: 1,
+    }).on('change', ({ value }) => {
+      if (algorithm instanceof FlowFieldAlgorithm) {
+        algorithm.setSettings({ strength: value });
+      }
+    });
+    pane.addInput(flowFieldSettings, 'fieldScale', {
+      label: '流場尺度',
+      min: 1,
+      max: 16,
+      step: 0.5,
+    }).on('change', ({ value }) => {
+      if (algorithm instanceof FlowFieldAlgorithm) {
+        algorithm.setSettings({ fieldScale: value });
+      }
+    });
+    pane.addInput(flowFieldSettings, 'drift', {
+      label: '漂移速度',
+      min: 0,
+      max: 2,
+      step: 0.05,
+    }).on('change', ({ value }) => {
+      if (algorithm instanceof FlowFieldAlgorithm) {
+        algorithm.setSettings({ drift: value });
+      }
+    });
+    pane.addInput(flowFieldSettings, 'damping', {
+      label: '阻尼',
+      min: 0.02,
+      max: 0.4,
+      step: 0.01,
+    }).on('change', ({ value }) => {
+      if (algorithm instanceof FlowFieldAlgorithm) {
+        algorithm.setSettings({ damping: value });
       }
     });
     return;
