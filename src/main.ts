@@ -2,11 +2,12 @@ import Stats from 'stats.js';
 import { Pane } from 'tweakpane';
 import type { BaseAlgorithm } from './algorithms/BaseAlgorithm';
 import { BoidsAlgorithm, type BoidsSettings } from './algorithms/BoidsAlgorithm';
+import { ParticleLifeAlgorithm, type ParticleLifeSettings } from './algorithms/ParticleLifeAlgorithm';
 import { ParticleSwarmOptimization, type PsoSettings } from './algorithms/ParticleSwarmOptimization';
 import { ParticleRenderer } from './ParticleRenderer';
 import './style.css';
 
-type AlgorithmName = 'boids' | 'pso';
+type AlgorithmName = 'boids' | 'pso' | 'particle-life';
 
 const canvas = getElement<HTMLCanvasElement>('#simulation');
 const canvasWrap = getElement<HTMLDivElement>('#canvas-wrap');
@@ -39,6 +40,12 @@ const psoSettings: PsoSettings = {
   cognitive: 1.45,
   social: 1.45,
 };
+const particleLifeSettings: ParticleLifeSettings = {
+  interactionRadius: 52,
+  force: 105,
+  friction: 1.35,
+  coreRepulsion: 1.4,
+};
 
 let algorithmName: AlgorithmName = 'boids';
 let algorithm: BaseAlgorithm;
@@ -61,9 +68,14 @@ function createAlgorithm(name: AlgorithmName, count: number): BaseAlgorithm {
     boids.setSettings(boidsSettings);
     return boids;
   }
-  const pso = new ParticleSwarmOptimization(count);
-  pso.setSettings(psoSettings);
-  return pso;
+  if (name === 'pso') {
+    const pso = new ParticleSwarmOptimization(count);
+    pso.setSettings(psoSettings);
+    return pso;
+  }
+  const particleLife = new ParticleLifeAlgorithm(count);
+  particleLife.setSettings(particleLifeSettings);
+  return particleLife;
 }
 
 function updateViewport(): void {
@@ -93,10 +105,17 @@ function updateLabels(count: number): void {
     algorithmDetail.textContent = 'EMERGENT FLOCKING';
     return;
   }
-  algorithmLabel.textContent = 'PARTICLE SWARM OPTIMIZATION';
-  canvasMode.textContent = 'PERSONAL BEST · GLOBAL BEST · CONVERGENCE';
-  algorithmMetric.textContent = 'PSO';
-  algorithmDetail.textContent = 'GLOBAL OPTIMIZATION';
+  if (algorithmName === 'pso') {
+    algorithmLabel.textContent = 'PARTICLE SWARM OPTIMIZATION';
+    canvasMode.textContent = 'PERSONAL BEST · GLOBAL BEST · CONVERGENCE';
+    algorithmMetric.textContent = 'PSO';
+    algorithmDetail.textContent = 'GLOBAL OPTIMIZATION';
+    return;
+  }
+  algorithmLabel.textContent = 'PARTICLE LIFE';
+  canvasMode.textContent = 'FOUR SPECIES · ATTRACTION · REPULSION';
+  algorithmMetric.textContent = 'P-LIFE';
+  algorithmDetail.textContent = '4 SPECIES · EMERGENT PATTERNS';
 }
 
 function createPane(): void {
@@ -156,34 +175,78 @@ function createPane(): void {
     return;
   }
 
-  pane.addInput(psoSettings, 'inertia', {
-    label: '慣性權重',
-    min: 0.1,
-    max: 1.2,
-    step: 0.01,
+  if (algorithmName === 'pso') {
+    pane.addInput(psoSettings, 'inertia', {
+      label: '慣性權重',
+      min: 0.1,
+      max: 1.2,
+      step: 0.01,
+    }).on('change', ({ value }) => {
+      if (algorithm instanceof ParticleSwarmOptimization) {
+        algorithm.setSettings({ inertia: value });
+      }
+    });
+    pane.addInput(psoSettings, 'cognitive', {
+      label: '個體學習',
+      min: 0,
+      max: 3,
+      step: 0.05,
+    }).on('change', ({ value }) => {
+      if (algorithm instanceof ParticleSwarmOptimization) {
+        algorithm.setSettings({ cognitive: value });
+      }
+    });
+    pane.addInput(psoSettings, 'social', {
+      label: '群體學習',
+      min: 0,
+      max: 3,
+      step: 0.05,
+    }).on('change', ({ value }) => {
+      if (algorithm instanceof ParticleSwarmOptimization) {
+        algorithm.setSettings({ social: value });
+      }
+    });
+    return;
+  }
+
+  pane.addInput(particleLifeSettings, 'interactionRadius', {
+    label: '互動半徑',
+    min: 18,
+    max: 120,
+    step: 1,
   }).on('change', ({ value }) => {
-    if (algorithm instanceof ParticleSwarmOptimization) {
-      algorithm.setSettings({ inertia: value });
+    if (algorithm instanceof ParticleLifeAlgorithm) {
+      algorithm.setSettings({ interactionRadius: value });
     }
   });
-  pane.addInput(psoSettings, 'cognitive', {
-    label: '個體學習',
+  pane.addInput(particleLifeSettings, 'force', {
+    label: '互動強度',
+    min: 10,
+    max: 220,
+    step: 1,
+  }).on('change', ({ value }) => {
+    if (algorithm instanceof ParticleLifeAlgorithm) {
+      algorithm.setSettings({ force: value });
+    }
+  });
+  pane.addInput(particleLifeSettings, 'friction', {
+    label: '速度阻尼',
     min: 0,
+    max: 5,
+    step: 0.05,
+  }).on('change', ({ value }) => {
+    if (algorithm instanceof ParticleLifeAlgorithm) {
+      algorithm.setSettings({ friction: value });
+    }
+  });
+  pane.addInput(particleLifeSettings, 'coreRepulsion', {
+    label: '核心排斥',
+    min: 0.2,
     max: 3,
     step: 0.05,
   }).on('change', ({ value }) => {
-    if (algorithm instanceof ParticleSwarmOptimization) {
-      algorithm.setSettings({ cognitive: value });
-    }
-  });
-  pane.addInput(psoSettings, 'social', {
-    label: '群體學習',
-    min: 0,
-    max: 3,
-    step: 0.05,
-  }).on('change', ({ value }) => {
-    if (algorithm instanceof ParticleSwarmOptimization) {
-      algorithm.setSettings({ social: value });
+    if (algorithm instanceof ParticleLifeAlgorithm) {
+      algorithm.setSettings({ coreRepulsion: value });
     }
   });
 }
