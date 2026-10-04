@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="互動式粒子演算法實驗室：探索 Boids 群集行為與粒子群最佳化。"
+    />
+    <meta name="theme-color" content="#080b14" />
+    <title>Particle Lab — 粒子演算法實驗室</title>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="./" aria-label="Particle Lab 首頁">
+          <span class="brand-mark" aria-hidden="true">✳</span>
+          <span>PARTICLE<span class="brand-light">LAB</span></span>
+        </a>
+        <div class="topbar-tag"><span class="live-dot"></span> REAL-TIME SIMULATION</div>
+      </header>
+
+      <main>
+        <section class="intro">
+          <p class="eyebrow">COMPUTATIONAL PLAYGROUND <span>01 / 02</span></p>
+          <h1>讓簡單規則，<span>湧現無限可能。</span></h1>
+          <p class="intro-copy">
+            調整參數，觀察粒子如何從局部互動中形成群體秩序，或協同搜尋最佳解。
+          </p>
+        </section>
+
+        <section class="workspace" aria-label="粒子演算法模擬">
+          <div class="simulation-card">
+            <div class="simulation-toolbar">
+              <div class="simulation-title">
+                <span class="live-dot"></span>
+                <span id="algorithm-label">BOIDS FLOCKING</span>
+                <span class="toolbar-divider"></span>
+                <span class="toolbar-muted">LIVE</span>
+              </div>
+              <button id="pause-button" class="icon-button" type="button" aria-label="暫停模擬">
+                <span aria-hidden="true">Ⅱ</span>
+                <span id="pause-label">暫停</span>
+              </button>
+            </div>
+            <div class="canvas-wrap" id="canvas-wrap">
+              <canvas id="simulation" aria-label="粒子演算法即時視覺化"></canvas>
+              <div class="canvas-vignette" aria-hidden="true"></div>
+              <div class="canvas-caption">
+                <span id="canvas-mode">SEPARATION · ALIGNMENT · COHESION</span>
+                <span id="canvas-hint">局部互動 · 全域湧現</span>
+              </div>
+            </div>
+            <div class="simulation-footer">
+              <span><span class="footer-dot"></span> SIMULATION ACTIVE</span>
+              <span>WEBGL 2.0 <span class="footer-separator">/</span> THREE.JS</span>
+            </div>
+          </div>
+
+          <aside class="side-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">CONTROL DECK</p>
+                <h2>模擬控制台</h2>
+              </div>
+              <span class="panel-index">01</span>
+            </div>
+
+            <div class="control-group">
+              <label for="algorithm-select">演算法 <span>ALGORITHM</span></label>
+              <select id="algorithm-select">
+                <option value="boids">Boids 群集行為</option>
+                <option value="pso">粒子群最佳化 (PSO)</option>
+              </select>
+            </div>
+
+            <div class="control-group">
+              <label for="particle-count">粒子數量 <span id="particle-count-value">10,000</span></label>
+              <input id="particle-count" type="range" min="500" max="100000" step="500" value="10000" />
+              <div class="range-labels"><span>500</span><span>100,000</span></div>
+            </div>
+
+            <div class="divider"></div>
+            <div id="tweakpane-container" class="tweakpane-container"></div>
+
+            <button id="reset-button" class="reset-button" type="button">
+              <span aria-hidden="true">↻</span> 重設模擬
+            </button>
+
+            <div class="panel-note">
+              <span class="note-icon" aria-hidden="true">✦</span>
+              <p>小小的局部規則，也能創造令人驚嘆的群體智慧。</p>
+            </div>
+          </aside>
+        </section>
+
+        <section class="metrics" aria-label="模擬效能指標">
+          <div class="metric">
+            <span class="metric-label">粒子數量 <span>PARTICLES</span></span>
+            <strong id="metric-particles">10,000</strong>
+            <span class="metric-detail">ACTIVE AGENTS</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">更新頻率 <span>FRAME RATE</span></span>
+            <strong><span id="metric-fps">--</span><small> FPS</small></strong>
+            <span class="metric-detail">REAL-TIME RENDERING</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">演算法 <span>ALGORITHM</span></span>
+            <strong id="metric-algorithm" class="metric-algorithm">BOIDS</strong>
+            <span class="metric-detail" id="metric-detail">EMERGENT FLOCKING</span>
+          </div>
+          <div class="metric metric-status">
+            <span class="metric-label">系統狀態 <span>STATUS</span></span>
+            <strong><span class="status-dot"></span><span id="metric-status">運作中</span></strong>
+            <span class="metric-detail">WEBGL ACCELERATED</span>
+          </div>
+        </section>
+      </main>
+
+      <footer class="page-footer">
+        <span>PARTICLE LAB <span class="footer-separator">©</span> 2026</span>
+        <span>BUILT FOR THE CURIOUS <span class="footer-separator">✳</span></span>
+      </footer>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

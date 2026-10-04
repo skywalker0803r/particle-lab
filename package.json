@@ -1,0 +1,23 @@
+{
+  "name": "particle-lab",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "stats.js": "^0.17.0",
+    "three": "^0.180.0",
+    "tweakpane": "^3.1.10"
+  },
+  "devDependencies": {
+    "@tweakpane/core": "^1.1.9",
+    "@types/stats.js": "^0.17.4",
+    "@types/three": "^0.180.0",
+    "typescript": "~5.9.3",
+    "vite": "^7.1.7"
+  }
+}
