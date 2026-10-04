@@ -73,10 +73,11 @@ Vite 會在終端機顯示本機網址，通常為 <http://localhost:5173/>。
 2. 將變更推送至 `main` 分支，或在 Actions 頁面手動執行 **Deploy to GitHub Pages**。
 3. 等待工作流程完成；網站網址為 <https://skywalker0803r.github.io/particle-lab/>。
 
-工作流程使用 `npm ci` 安裝鎖定版本的相依套件，再執行 `npm run build`，最後將 `dist/` 發佈至 GitHub Pages。
+工作流程先使用 `actions/configure-pages` 檢查 Pages 網站設定，再使用 `npm ci` 安裝鎖定版本的相依套件、執行 `npm run build`，最後將 `dist/` 發佈至 GitHub Pages。首次部署前須由 repository 管理者完成上述 Pages 設定；工作流程的預設 `GITHUB_TOKEN` 無法自動啟用 Pages。
 
 ## 疑難排解
 
 - **無法啟動模擬或畫面沒有粒子：**確認瀏覽器及裝置支援 WebGL，並更新顯示卡驅動程式或嘗試其他現代瀏覽器。
 - **動畫不流暢：**先降低粒子數量；100,000 粒子所需效能依裝置而異。
 - **部署未觸發：**確認變更已推送至 `main`，且 Pages 的部署來源為 **GitHub Actions**。
+- **部署失敗並顯示 `404 Not Found` 或 `Ensure GitHub Pages has been enabled`：**在 **Settings → Pages → Build and deployment → Source** 選擇 **GitHub Actions** 並儲存，待設定生效後重新執行 **Deploy to GitHub Pages**。僅重新建置網站無法修復尚未啟用 Pages 的設定問題。
